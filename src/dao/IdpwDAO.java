@@ -22,7 +22,7 @@ public class IdpwDAO {
 			conn = DriverManager.getConnection("jdbc:h2:file:C:/pleiades/workspace/data/simpleBC", "sa", "");
 
 			// SELECT文を準備する
-			String sql = "select count(*) from IDPW where ID = ? and PW = ?";
+			String sql = "select count(*) from UserAccount where ID = ? and PW = ?";
 			PreparedStatement pStmt = conn.prepareStatement(sql);
 			pStmt.setString(1, idpw.getId());
 			pStmt.setString(2,idpw.getPw());
@@ -34,7 +34,7 @@ public class IdpwDAO {
 			rs.next();
 			if (rs.getInt("count(*)") == 1) {
 				loginResult = true;
-			}	
+			}
 		}
 		catch (SQLException e) {
 			e.printStackTrace();

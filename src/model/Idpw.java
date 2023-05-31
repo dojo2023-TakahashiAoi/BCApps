@@ -3,7 +3,7 @@ import java.io.Serializable;
 
 public class Idpw implements Serializable {
 	private String id;	// ID
-	private String pw;	// PW
+	private String pw;	// ハッシュ化済みPW
 
 	public Idpw(String id, String pw) {
 		this.id = id;

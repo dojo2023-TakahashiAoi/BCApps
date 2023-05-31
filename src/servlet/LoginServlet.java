@@ -12,7 +12,7 @@ import javax.servlet.http.HttpSession;
 
 import dao.IdpwDAO;
 import model.Idpw;
-import model.LoginUser;
+import model.PasswordHashing;
 import model.Result;
 
 /**
@@ -39,21 +39,21 @@ public class LoginServlet extends HttpServlet {
 		request.setCharacterEncoding("UTF-8");
 		String id = request.getParameter("ID");
 		String pw = request.getParameter("PW");
+		String hashedPw = PasswordHashing.hashPassword(pw);
 
 		// ログイン処理を行う
 		IdpwDAO iDao = new IdpwDAO();
-		if (iDao.isLoginOK(new Idpw(id, pw))) {	// ログイン成功
+		if (iDao.isLoginOK(new Idpw(id, hashedPw))) {	// ログイン成功
 			// セッションスコープにIDを格納する
 			HttpSession session = request.getSession();
-			session.setAttribute("id", new LoginUser(id));
+			session.setAttribute("id", id);
 
 			// メニューサーブレットにリダイレクトする
 			response.sendRedirect("/simpleBC/MenuServlet");
 		}
 		else {									// ログイン失敗
 			// リクエストスコープに、タイトル、メッセージ、戻り先を格納する
-			request.setAttribute("result",
-			new Result("ログイン失敗！", "IDまたはPWに間違いがあります。", "/simpleBC/LoginServlet"));
+			request.setAttribute("result", new Result("ログイン失敗！", "IDまたはPWに間違いがあります。", "/simpleBC/LoginServlet"));
 
 			// 結果ページにフォワードする
 			RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/jsp/result.jsp");

@@ -8,6 +8,7 @@
 </head>
 <body>
 <h1><c:out value="${result.title}" /></h1>
+<span>test</span>
 <hr>
 <p><c:out value="${result.message}" /></p>
 <a href="${result.backTo}">メニューへ戻る</a>

@@ -12,62 +12,62 @@ import model.Bc;
 
 public class BcDAO {
 	// 引数paramで検索項目を指定し、検索結果のリストを返す
-	public List<Bc> select(Bc param) {
+	public List<Bc> search(String searchQuery, String id) {
 		Connection conn = null;
-		List<Bc> cardList = new ArrayList<Bc>();
+		List<Bc> cardList = new ArrayList<Bc>(); //BCのオブジェクトを格納する用のリスト
 
 		try {
-			// JDBCドライバを読み込む
 			Class.forName("org.h2.Driver");
-
-			// データベースに接続する
 			conn = DriverManager.getConnection("jdbc:h2:file:C:/pleiades/workspace/data/simpleBC", "sa", "");
 
-			// SQL文を準備する
-			String sql = "select NUMBER, NAME, ADDRESS from BC WHERE NUMBER LIKE ? AND NAME LIKE ? AND ADDRESS LIKE ? ORDER BY NUMBER";
+			String sql = "SELECT ID, NAME, COMPANY, DEPARTMENT, POSITION, ADDRESS, EMAIL, PHONE_NUMBER, POST_CODE, MEMO, LINKED_USER, TIMESTAMP " +
+		             "FROM BC " +
+		             "WHERE ID LIKE ? OR NAME LIKE ? OR COMPANY LIKE ? OR DEPARTMENT LIKE ? OR POSITION LIKE ? OR ADDRESS LIKE ? OR EMAIL LIKE ? OR PHONE_NUMBER LIKE ? OR POST_CODE LIKE ?" +
+		             "AND LINKED_USER='" + id + "' ORDER BY TIMESTAMP;";
+
 			PreparedStatement pStmt = conn.prepareStatement(sql);
 
-			// SQL文を完成させる
-			if (param.getNumber() != null) {
-				pStmt.setString(1, "%" + param.getNumber() + "%");
-			}
-			else {
-				pStmt.setString(1, "%");
-			}
-			if (param.getName() != null) {
-				pStmt.setString(2, "%" + param.getName() + "%");
-			}
-			else {
-				pStmt.setString(2, "%");
-			}
-			if (param.getAddress() != null) {
-				pStmt.setString(3, "%" + param.getAddress() + "%");
-			}
-			else {
-				pStmt.setString(3, "%");
-			}
+			pStmt.setString(1, "%" + searchQuery + "%");
+			pStmt.setString(2, "%" + searchQuery + "%");
+			pStmt.setString(3, "%" + searchQuery + "%");
+			pStmt.setString(4, "%" + searchQuery + "%");
+			pStmt.setString(5, "%" + searchQuery + "%");
+			pStmt.setString(6, "%" + searchQuery + "%");
+			pStmt.setString(7, "%" + searchQuery + "%");
+			pStmt.setString(8, "%" + searchQuery + "%");
+			pStmt.setString(9, "%" + searchQuery + "%");
 
-			// SQL文を実行し、結果表を取得する
 			ResultSet rs = pStmt.executeQuery();
 
-			// 結果表をコレクションにコピーする
 			while (rs.next()) {
 				Bc card = new Bc(
-				rs.getString("NUMBER"),
+				rs.getString("ID"),
 				rs.getString("NAME"),
-				rs.getString("ADDRESS")
+				rs.getString("COMPANY"),
+				rs.getString("DEPARTMENT"),
+				rs.getString("POSITION"),
+				rs.getString("ADDRESS"),
+				rs.getString("EMAIL"),
+				rs.getString("PHONE_NUMBER"),
+				rs.getString("POST_CODE"),
+				rs.getString("MEMO"),
+				rs.getString("LINKED_USER"),
+				rs.getTimestamp("TIMESTAMP")
 				);
 				cardList.add(card);
 			}
 		}
+
 		catch (SQLException e) {
 			e.printStackTrace();
 			cardList = null;
 		}
+
 		catch (ClassNotFoundException e) {
 			e.printStackTrace();
 			cardList = null;
 		}
+
 		finally {
 			// データベースを切断
 			if (conn != null) {
@@ -81,12 +81,13 @@ public class BcDAO {
 			}
 		}
 
-		// 結果を返す
 		return cardList;
 	}
 
+
+	//　名刺データを登録するメソッド
 	// 引数cardで指定されたレコードを登録し、成功したらtrueを返す
-	public boolean insert(Bc card) {
+	public boolean cardAdd(Bc card) {
 		Connection conn = null;
 		boolean result = false;
 
@@ -98,28 +99,20 @@ public class BcDAO {
 			conn = DriverManager.getConnection("jdbc:h2:file:C:/pleiades/workspace/data/simpleBC", "sa", "");
 
 			// SQL文を準備する
-			String sql = "insert into BC (NUMBER, NAME, ADDRESS) values (?, ?, ?)";
+		String sql = "INSERT INTO BC VALUES (?, ?, ?,　?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement pStmt = conn.prepareStatement(sql);
-
-			// SQL文を完成させる
-			if (card.getNumber() != null && !card.getNumber().equals("")) {
-				pStmt.setString(1, card.getNumber());
-			}
-			else {
-				pStmt.setString(1, null);
-			}
-			if (card.getName() != null && !card.getName().equals("")) {
-				pStmt.setString(2, card.getName());
-			}
-			else {
-				pStmt.setString(2, null);
-			}
-			if (card.getAddress() != null && !card.getAddress().equals("")) {
-				pStmt.setString(3, card.getAddress());
-			}
-			else {
-				pStmt.setString(3, null);
-			}
+			pStmt.setString(1, card.getId());
+			pStmt.setString(2, card.getName());
+			pStmt.setString(3, card.getCompany());
+			pStmt.setString(4, card.getDepartment());
+			pStmt.setString(5, card.getPosition());
+			pStmt.setString(6, card.getAddress());
+			pStmt.setString(7, card.getEmail());
+			pStmt.setString(8, card.getPhone_number());
+			pStmt.setString(9, card.getPost_code());
+			pStmt.setString(10, card.getMemo());
+			pStmt.setString(11, card.getLinkedUser());
+			pStmt.setTimestamp(12, card.getTimestamp());
 
 			// SQL文を実行する
 			if (pStmt.executeUpdate() == 1) {
@@ -148,40 +141,39 @@ public class BcDAO {
 		return result;
 	}
 
+	// 名刺データを更新するメソッド
 	// 引数cardで指定されたレコードを更新し、成功したらtrueを返す
 	public boolean update(Bc card) {
 		Connection conn = null;
 		boolean result = false;
 
 		try {
-			// JDBCドライバを読み込む
 			Class.forName("org.h2.Driver");
-
-			// データベースに接続する
 			conn = DriverManager.getConnection("jdbc:h2:file:C:/pleiades/workspace/data/simpleBC", "sa", "");
-
-			// SQL文を準備する
-			String sql = "update BC set NAME=?, ADDRESS=? where NUMBER=?";
+			String sql = "UPDATE BC SET NAME=?, COMPANY=?, DEPARTMENT=?, POSITION=?, ADDRESS=?, EMAIL=?, PHONE_NUMBER=?, POST_CODE=?, MEMO=? WHERE ID = ?";
 			PreparedStatement pStmt = conn.prepareStatement(sql);
 
-			// SQL文を完成させる
-			if (card.getName() != null && !card.getName().equals("")) {
-				pStmt.setString(1, card.getName());
-			}
-			else {
-				pStmt.setString(1, null);
-			}
-			if (card.getAddress() != null && !card.getAddress().equals("")) {
-				pStmt.setString(2, card.getAddress());
-			}
-			else {
-				pStmt.setString(2, null);
-			}
-			pStmt.setString(3, card.getNumber());
+			pStmt.setString(1, card.getName());
+			pStmt.setString(2, card.getCompany());
+			pStmt.setString(3, card.getDepartment());
+			pStmt.setString(4, card.getPosition());
+			pStmt.setString(5, card.getAddress());
+			pStmt.setString(6, card.getEmail());
+			pStmt.setString(7, card.getPhone_number());
+			pStmt.setString(8, card.getPost_code());
+			pStmt.setString(9, card.getMemo());
 
-			// SQL文を実行する
-			if (pStmt.executeUpdate() == 1) {
-				result = true;
+			pStmt.setString(10, card.getId());
+
+
+			try {
+			    // 更新処理の実行
+				if (pStmt.executeUpdate() == 1) {
+					result = true;
+				}
+			} catch (Exception e) {
+			    e.printStackTrace();
+			    // 例外の処理またはエラーメッセージの表示など
 			}
 		}
 		catch (SQLException e) {
@@ -206,24 +198,19 @@ public class BcDAO {
 		return result;
 	}
 
+	//　名刺データを削除するメソッド
 	// 引数numberで指定されたレコードを削除し、成功したらtrueを返す
-	public boolean delete(String number) {
+	public boolean delete(String id) {
 		Connection conn = null;
 		boolean result = false;
 
 		try {
-			// JDBCドライバを読み込む
 			Class.forName("org.h2.Driver");
-
-			// データベースに接続する
 			conn = DriverManager.getConnection("jdbc:h2:file:C:/pleiades/workspace/data/simpleBC", "sa", "");
 
-			// SQL文を準備する
-			String sql = "delete from BC where NUMBER=?";
+			String sql = "delete from BC where ID=?";
 			PreparedStatement pStmt = conn.prepareStatement(sql);
-
-			// SQL文を完成させる
-			pStmt.setString(1, number);
+			pStmt.setString(1, id);
 
 			// SQL文を実行する
 			if (pStmt.executeUpdate() == 1) {

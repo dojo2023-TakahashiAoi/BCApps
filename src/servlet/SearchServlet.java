@@ -48,21 +48,15 @@ public class SearchServlet extends HttpServlet {
 			return;
 		}
 
+		String id = (String)session.getAttribute("id");
+
 		// リクエストパラメータを取得する
 		request.setCharacterEncoding("UTF-8");
-		String number = request.getParameter("NUMBER");
-		String name = request.getParameter("NAME");
-		String address = request.getParameter("ADDRESS");
-
-		// 検索処理を行う
+		String searchQuery = request.getParameter("SEARCH_QUERY");
 		BcDAO bDao = new BcDAO();
-		List<Bc> cardList = bDao.select(new Bc(number, name, address));
-
-		// 検索結果をリクエストスコープに格納する
+		List<Bc> cardList = bDao.search(searchQuery, id);
 		request.setAttribute("cardList", cardList);
-
-		// 結果ページにフォワードする
-		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/jsp/search_result.jsp");
+		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/jsp/menu.jsp");
 		dispatcher.forward(request, response);
 	}
 }
